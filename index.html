@@ -29,8 +29,11 @@
     flex-direction: column;
   }
 
-  /* Welcome card */
+  .is-hidden { display: none !important; }
+
+  /* Welcome card: always stacked vertically */
   .setup {
+    display: block;
     width: calc(100% - 32px);
     max-width: 380px;
     margin: auto;
@@ -39,13 +42,12 @@
     border: 1px solid var(--line);
     border-radius: 18px;
     box-shadow: 0 0 40px var(--blue-glow);
-    flex-direction: column;
   }
   .setup .hello { font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--blue-2); margin: 0 0 6px; }
   .setup h2 { margin: 0 0 6px; font-size: 24px; font-weight: 600; }
   .setup .lead { margin: 0 0 20px; color: var(--muted); font-size: 14px; line-height: 1.5; }
-  .setup input { width: 100%; margin-bottom: 12px; }
-  .setup button { width: 100%; margin-top: 4px; padding: 13px; font-size: 16px; }
+  .setup input { display: block; width: 100%; margin-bottom: 12px; }
+  .setup button { display: block; width: 100%; margin-top: 4px; padding: 13px; font-size: 16px; }
 
   /* Inputs and buttons */
   input {
@@ -98,6 +100,7 @@
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    cursor: pointer;
   }
 
   #err { color: var(--err); font-size: 14px; min-height: 18px; margin: 10px 0 0; text-align: center; }
@@ -105,6 +108,7 @@
 
   /* Chat screen */
   #chat {
+    display: flex;
     flex: 1;
     min-height: 0;
     flex-direction: column;
@@ -160,7 +164,6 @@
   .who { font-size: 11px; color: var(--blue-2); margin-bottom: 3px; font-weight: 500; }
   .b.mine .who { color: #bfdbfe; text-align: right; }
   .media { display: block; max-width: 100%; max-height: 320px; border-radius: 12px; margin-top: 6px; }
-  .media-wrap { max-width: 78%; }
   .body { margin-top: 4px; white-space: pre-wrap; }
 
   form {
@@ -177,7 +180,7 @@
 </head>
 <body>
 
-<div class="setup" id="setup" style="display:none">
+<div class="setup is-hidden" id="setup">
   <p class="hello">Hey there</p>
   <h2>Welcome in</h2>
   <p class="lead">A private space for just the two of you. Enter your name and your four secret words to meet here.</p>
@@ -187,7 +190,7 @@
   <p id="err"></p>
 </div>
 
-<div id="chat" style="display:none">
+<div id="chat" class="is-hidden">
   <header>
     <div class="title">Our chat<span>Just the two of you</span></div>
     <button class="small" onclick="localStorage.clear(); location.reload()">Switch</button>
@@ -216,8 +219,8 @@
   let roomCode = localStorage.getItem('room') || '';
   let messages = [];
 
-  function show(id) { document.getElementById(id).style.display = ''; }
-  function hide(id) { document.getElementById(id).style.display = 'none'; }
+  function show(id) { document.getElementById(id).classList.remove('is-hidden'); }
+  function hide(id) { document.getElementById(id).classList.add('is-hidden'); }
 
   function join() {
     const name = document.getElementById('name').value.trim();
