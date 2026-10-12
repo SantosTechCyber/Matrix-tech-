@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>KU Online Voting System - Prototype</title>
+<style>
+:root{--green:#0b6e4f;--dark:#133a2e;--bg:#f2f6f4;--red:#b3261e;}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:#1d2b26;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px}
+.card{background:#fff;max-width:520px;width:100%;border-radius:14px;padding:28px 24px;box-shadow:0 6px 24px rgba(0,0,0,.08)}
+h1{font-size:1.4rem;color:var(--dark);margin:0 0 10px}
+h2{font-size:1.15rem;color:var(--dark);margin:0 0 10px}
+p{line-height:1.55;margin:8px 0}
+.muted{color:#5a6b65;font-size:.9rem}
+label{font-weight:600;font-size:.95rem}
+input[type=text],input[type=password]{width:100%;padding:12px;font-size:1rem;border:1px solid #bcc9c3;border-radius:8px;margin:6px 0 12px}
+button{background:var(--green);color:#fff;border:0;border-radius:8px;padding:12px 18px;font-size:1rem;cursor:pointer;width:100%;margin-top:6px}
+button.secondary{background:#e7efeb;color:var(--dark)}
+button.danger{background:var(--red)}
+button:disabled{opacity:.45;cursor:not-allowed}
+.link{background:none;color:var(--green);width:auto;padding:0;margin-top:18px;text-decoration:underline;font-size:.9rem}
+.err{color:var(--red);font-weight:600;margin:8px 0;min-height:1.2em}
+.terms{max-height:220px;overflow:auto;font-size:.92rem;background:#f7faf8;padding:12px;border-radius:8px;border:1px solid #dce6e0;line-height:1.5}
+.check{display:flex;gap:8px;align-items:flex-start;margin:14px 0;font-size:.95rem}
+.check input{margin-top:4px}
+.halt{border-left:5px solid var(--red);background:#fdecea;padding:16px;border-radius:8px}
+.ok{border-left:5px solid var(--green);background:#e8f5ee;padding:16px;border-radius:8px}
+.credit{margin-top:18px;padding-top:12px;border-top:1px solid #cfe0d7;text-align:center;font-size:.9rem;color:#5a6b65}
+.credit b{color:var(--dark)}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.choices button{padding:22px 10px;font-size:1.15rem}
+.hidden{display:none!important}
+table{width:100%;border-collapse:collapse;font-size:.9rem;margin-top:10px}
+th,td{border-bottom:1px solid #e1e8e4;padding:7px 6px;text-align:left}
+.scroll{max-height:240px;overflow:auto}
+.announce{margin-top:14px;padding:14px;border-radius:8px;background:#fff8e1;border-left:5px solid #f9a825;font-weight:600}
+.tag{display:inline-block;background:#fff3cd;color:#664d03;padding:4px 8px;border-radius:6px;font-size:.8rem;margin-bottom:10px}
+.row{display:flex;gap:10px}
+.row button{width:auto;flex:1}
+</style>
+</head>
+<body>
+<div class="card">
+
+  <!-- 1. WELCOME -->
+  <section id="s-welcome" class="screen">
+    <span class="tag">Prototype for demonstration only</span>
+    <h1>Welcome to Kenyatta University Online Voting System</h1>
+    <p>Cast your vote for student leader from anywhere, securely and in a few minutes.</p>
+    <button onclick="show('s-terms')">Continue</button>
+    <button class="link" onclick="show('s-login')">Election officer login</button>
+  </section>
+
+  <!-- 2. TERMS -->
+  <section id="s-terms" class="screen hidden">
+    <h2>Terms and Conditions</h2>
+    <div class="terms">
+      <p>1. You may vote only once in this election.</p>
+      <p>2. Only students whose admission number is valid for the 2026 intake may vote.</p>
+      <p>3. Your vote is secret. Do not share your admission number or screenshots of your vote.</p>
+      <p>4. Providing false information is an offence and will invalidate your vote.</p>
+      <p>5. This is a prototype for demonstration. It is not an official university election.</p>
+    </div>
+    <label class="check"><input type="checkbox" id="agree" onchange="document.getElementById('btn-agree').disabled=!this.checked"> I have read and agree to the terms and conditions.</label>
+    <button id="btn-agree" disabled onclick="show('s-adm')">I Agree</button>
+    <button class="link" onclick="show('s-welcome')">Back</button>
+  </section>
+
+  <!-- 3. ADMISSION NUMBER -->
+  <section id="s-adm" class="screen hidden">
+    <h2>Enter your admission number</h2>
+    <p class="muted">Format: I163/0000/2026. Change only the middle 4 digits.</p>
+    <label for="adm">Admission number</label>
+    <input type="text" id="adm" value="I163/" autocomplete="off">
+    <div class="err" id="adm-err"></div>
+    <button onclick="checkAdmission()">Next</button>
+  </section>
+
+  <!-- 4. FULL NAME -->
+  <section id="s-name" class="screen hidden">
+    <h2>Enter your full name</h2>
+    <label for="fullname">Full name</label>
+    <input type="text" id="fullname" autocomplete="off">
+    <div class="err" id="name-err"></div>
+    <button onclick="checkName()">Next</button>
+  </section>
+
+  <!-- 5. VOTE -->
+  <section id="s-vote" class="screen hidden">
+    <h2>Choose your leader</h2>
+    <p class="muted">Select one candidate. You cannot change your vote after submitting.</p>
+    <div class="choices">
+      <button onclick="castVote('Joel')">Joel</button>
+      <button onclick="castVote('Nashon')">Nashon</button>
+    </div>
+  </section>
+
+  <!-- 6. THANK YOU (program halts) -->
+  <section id="s-thanks" class="screen hidden">
+    <div class="ok">
+      <h2>Thank you!</h2>
+      <p>Your vote has been recorded. Thank you for participating.</p>
+      <p>Please wait for the official results, which will be announced after 24 hours.</p>
+      <p class="muted"><b>The voting program has now halted.</b></p>
+    </div>
+    <div class="credit">Created by <b>Matrix tech</b></div>
+  </section>
+
+  <!-- 7. HALTED (not eligible / already voted) -->
+  <section id="s-halt" class="screen hidden">
+    <div class="halt">
+      <h2>You can't vote</h2>
+      <p id="halt-msg"></p>
+      <p class="muted"><b>The voting program has been halted.</b></p>
+    </div>
+  </section>
+
+  <!-- ADMIN LOGIN -->
+  <section id="s-login" class="screen hidden">
+    <h2>Election officer login</h2>
+    <label for="a-name">Name</label>
+    <input type="text" id="a-name" autocomplete="off">
+    <label for="a-pass">Passcode</label>
+    <input type="password" id="a-pass">
+    <div class="err" id="login-err"></div>
+    <button onclick="adminLogin()">Log in</button>
+    <button class="link" onclick="show('s-welcome')">Back</button>
+  </section>
+
+  <!-- ADMIN DASHBOARD -->
+  <section id="s-admin" class="screen hidden">
+    <h2>Election dashboard</h2>
+    <p class="muted">Visible to the election officer only.</p>
+    <div class="row">
+      <button onclick="countVotes()">Count votes from database</button>
+      <button class="secondary" onclick="announceLeader()">Announce leader</button>
+    </div>
+    <div id="tally"></div>
+    <div id="announce"></div>
+    <h3 style="margin:18px 0 0;font-size:1rem">Vote records</h3>
+    <div class="scroll"><table id="records"></table></div>
+    <div class="row" style="margin-top:14px">
+      <button class="danger" onclick="resetDemo()">Reset demo data</button>
+      <button class="secondary" onclick="logout()">Log out</button>
+    </div>
+  </section>
+
+</div>
+
+<script>
+const CANDIDATES = ["Joel", "Nashon"];
+const ADMIN_NAME = "Future";
+const ADMIN_PASSCODE = "matrix"; // Demo only. Real systems verify credentials on a server with MFA.
+const STORAGE_KEY = "ku_online_vote_demo";
+
+let session = { adm: "", name: "" };
+let memoryDB = []; // fallback if localStorage is unavailable
+
+function show(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.add("hidden"));
+  document.getElementById(id).classList.remove("hidden");
+}
+
+function loadDB() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    return memoryDB;
+  }
+}
+
+function saveDB(db) {
+  memoryDB = db;
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(db)); } catch (e) {}
+}
+
+function haltWith(msg) {
+  document.getElementById("halt-msg").textContent = msg;
+  show("s-halt");
+}
+
+function checkAdmission() {
+  const errEl = document.getElementById("adm-err");
+  errEl.textContent = "";
+  const value = document.getElementById("adm").value.trim().toUpperCase();
+  const m = value.match(/^I163\/(\d{4})\/(\d{4})$/);
+
+  if (!m) {
+    errEl.textContent = "Invalid format. Use I163/0000/2026 with 4 digits in the middle.";
+    return;
+  }
+  if (m[2] !== "2026") {
+    haltWith("Your admission number does not end in 2026, so you are not eligible to vote in this election.");
+    return;
+  }
+  if (loadDB().some(r => r.adm === value)) {
+    haltWith("This admission number has already voted. Each student may vote only once.");
+    return;
+  }
+  session.adm = value;
+  show("s-name");
+}
+
+function checkName() {
+  const errEl = document.getElementById("name-err");
+  const name = document.getElementById("fullname").value.trim();
+  if (name.length < 3 || !/\s/.test(name)) {
+    errEl.textContent = "Please enter your full name (first and last name).";
+    return;
+  }
+  errEl.textContent = "";
+  session.name = name;
+  show("s-vote");
+}
+
+function castVote(choice) {
+  const db = loadDB();
+  if (db.some(r => r.adm === session.adm)) {
+    haltWith("This admission number has already voted.");
+    return;
+  }
+  db.push({ adm: session.adm, name: session.name, choice: choice, time: new Date().toLocaleString() });
+  saveDB(db);
+  session = { adm: "", name: "" };
+  document.getElementById("adm").value = "I163/";
+  document.getElementById("fullname").value = "";
+  show("s-thanks");
+}
+
+/* ---------- Admin ---------- */
+
+function adminLogin() {
+  const name = document.getElementById("a-name").value.trim();
+  const pass = document.getElementById("a-pass").value;
+  if (name.toUpperCase() === ADMIN_NAME.toUpperCase() && pass === ADMIN_PASSCODE) {
+    document.getElementById("login-err").textContent = "";
+    document.getElementById("a-pass").value = "";
+    renderRecords();
+    document.getElementById("tally").innerHTML = "";
+    document.getElementById("announce").innerHTML = "";
+    show("s-admin");
+  } else {
+    document.getElementById("login-err").textContent = "Access denied. Only the election officer can view this page.";
+  }
+}
+
+function renderRecords() {
+  const db = loadDB();
+  const t = document.getElementById("records");
+  t.innerHTML = "<tr><th>#</th><th>Admission no.</th><th>Name</th><th>Vote</th><th>Time</th></tr>";
+  if (db.length === 0) {
+    t.innerHTML += "<tr><td colspan='5' class='muted'>No votes recorded yet.</td></tr>";
+    return;
+  }
+  db.forEach((r, i) => {
+    const tr = document.createElement("tr");
+    [i + 1, r.adm, r.name, r.choice, r.time].forEach(v => {
+      const td = document.createElement("td");
+      td.textContent = v;
+      tr.appendChild(td);
+    });
+    t.appendChild(tr);
+  });
+}
+
+function tallyFromDB() {
+  const db = loadDB();
+  const counts = {};
+  CANDIDATES.forEach(c => counts[c] = 0);
+  db.forEach(r => { if (counts.hasOwnProperty(r.choice)) counts[r.choice]++; });
+  return { counts: counts, total: db.length };
+}
+
+function countVotes() {
+  renderRecords();
+  const { counts, total } = tallyFromDB();
+  let html = "<table><tr><th>Candidate</th><th>Votes</th><th>Share</th></tr>";
+  CANDIDATES.forEach(c => {
+    const pct = total ? ((counts[c] / total) * 100).toFixed(1) : "0.0";
+    html += "<tr><td>" + c + "</td><td>" + counts[c] + "</td><td>" + pct + "%</td></tr>";
+  });
+  html += "</table><p class='muted'>Total votes counted: " + total + "</p>";
+  document.getElementById("tally").innerHTML = html;
+  document.getElementById("announce").innerHTML = "";
+}
+
+function announceLeader() {
+  const { counts, total } = tallyFromDB();
+  const el = document.getElementById("announce");
+  if (total === 0) {
+    el.innerHTML = "<div class='announce'>No votes have been cast yet, so no leader can be announced.</div>";
+    return;
+  }
+  const max = Math.max(...CANDIDATES.map(c => counts[c]));
+  const leaders = CANDIDATES.filter(c => counts[c] === max);
+  if (leaders.length > 1) {
+    el.innerHTML = "<div class='announce'>The election is tied. A re-run is required.</div>";
+  } else {
+    el.innerHTML = "<div class='announce'>The elected student leader is " + leaders[0] + " with " + max + " of " + total + " votes.</div>";
+  }
+}
+
+function resetDemo() {
+  if (!confirm("Delete all demo votes? This cannot be undone.")) return;
+  saveDB([]);
+  renderRecords();
+  document.getElementById("tally").innerHTML = "";
+  document.getElementById("announce").innerHTML = "";
+}
+
+function logout() {
+  show("s-welcome");
+}
+
+show("s-welcome");
+</script>
+</body>
+</html>
