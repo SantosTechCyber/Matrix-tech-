@@ -197,9 +197,9 @@ th{color:var(--accent);font-weight:600}
   <!-- 3. ADMISSION NUMBER -->
   <section id="s-adm" class="screen hidden">
     <h2>Enter your admission number</h2>
-    <p class="muted">Format: I163/0000/2026. Change only the middle 4 digits.</p>
+    <p class="muted">Format: LETTER-CODE/0000/2026, for example I163/0000/2026 or J31/0000/2026.</p>
     <label for="adm">Admission number</label>
-    <input type="text" id="adm" value="I163/" autocomplete="off">
+    <input type="text" id="adm" placeholder="e.g. I163/0000/2026" autocomplete="off">
     <div class="err" id="adm-err"></div>
     <button id="btn-adm" onclick="checkAdmission()">Next</button>
   </section>
@@ -278,7 +278,7 @@ th{color:var(--accent);font-weight:600}
 <script>
 const CANDIDATES = ["Joel", "Nashon"];
 const ADMIN_NAME = "Future";
-const ADMIN_PASSCODE = "matrix"; // Demo only. Real systems verify credentials on a server.
+const ADMIN_PASSCODE = "Nicah"; // Demo only. Real systems verify credentials on a server.
 
 // Supabase connection
 const SUPABASE_URL = "https://rbqjknldwdbebkdxdzyw.supabase.co";
@@ -328,13 +328,15 @@ async function checkAdmission() {
   const errEl = document.getElementById("adm-err");
   errEl.textContent = "";
   const value = document.getElementById("adm").value.trim().toUpperCase();
-  const m = value.match(/^I163\/(\d{4})\/(\d{4})$/);
+
+  // Letter first, then letters/digits for the code, then 4 digits, then the year.
+  const m = value.match(/^([A-Z][A-Z0-9]*)\/(\d{4})\/(\d{4})$/);
 
   if (!m) {
-    errEl.textContent = "Invalid format. Use I163/0000/2026 with 4 digits in the middle.";
+    errEl.textContent = "Invalid format. Use LETTER-CODE/0000/2026, for example I163/0000/2026.";
     return;
   }
-  if (m[2] !== "2026") {
+  if (m[3] !== "2026") {
     haltWith("Your admission number does not end in 2026, so you are not eligible to vote in this election.");
     return;
   }
@@ -384,7 +386,7 @@ async function castVote(choice) {
     }
     if (!res.ok) throw new Error("Save failed");
     session = { adm: "", name: "" };
-    document.getElementById("adm").value = "I163/";
+    document.getElementById("adm").value = "";
     document.getElementById("fullname").value = "";
     show("s-thanks");
   } catch (e) {
@@ -484,4 +486,4 @@ async function announceLeader() {
 show("s-welcome");
 </script>
 </body>
-  </html>
+      </html>
